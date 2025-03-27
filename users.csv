@@ -1,2 +1,2 @@
-alice;password123;CLIENT;C001
-bob;securePass;ADMIN;null
+alice;ef92b778bafe771e89245b89ecbc08a44a4e166c06659911881f383d4473e94f;CLIENT;C001
+bob;bc47c7a7fd6ecb8611634bb3c7db0e5f3a165878b7410d2aec124a6431f96b7e;ADMIN;null

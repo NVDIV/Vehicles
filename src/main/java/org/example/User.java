@@ -8,7 +8,7 @@ public class User {
 
     public User(String login, String password, UserRole role, String rentedVehicleID) {
         this.login = login;
-        this.password = password;
+        this.password = Authentication.hashPassword(password);
         this.role = role;
         this.rentedVehicleID = rentedVehicleID;
     }
