@@ -3,7 +3,6 @@ package com.umcsuser.carrent.db;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
-//TODO:ustawienie zmiennej srodowiskowej DB_URL
 public class JdbcConnectionManager {
     private static JdbcConnectionManager instance;
     private final String url;

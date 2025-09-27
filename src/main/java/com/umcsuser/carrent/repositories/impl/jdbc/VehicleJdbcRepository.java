@@ -78,30 +78,50 @@ public class VehicleJdbcRepository implements VehicleRepository {
     public Vehicle save(Vehicle vehicle) {
         if (vehicle.getId() == null || vehicle.getId().isBlank()) {
             vehicle.setId(UUID.randomUUID().toString());
-        //TODO:Zamiast usuwania dopisać sprawdzenie czy jest id w tabeli, jak tak zrobić sql update,jak nie-wstawic nowy pojazd
-        } else {
-            deleteById(vehicle.getId());
         }
 
-        String sql = "INSERT INTO vehicle (id, category, brand, model, year, plate, price, attributes) VALUES (?, ?, ?, ?, ?, ?, ?, ?::jsonb)";
+        String checkSql = "SELECT COUNT(*) FROM vehicle WHERE id = ?";
         try (Connection connection = JdbcConnectionManager.getInstance().getConnection();
-             PreparedStatement stmt = connection.prepareStatement(sql)) {
+             PreparedStatement checkStmt = connection.prepareStatement(checkSql)) {
 
-            stmt.setString(1, vehicle.getId());
-            stmt.setString(2, vehicle.getCategory());
-            stmt.setString(3, vehicle.getBrand());
-            stmt.setString(4, vehicle.getModel());
-            stmt.setInt(5, vehicle.getYear());
-            stmt.setString(6, vehicle.getPlate());
-            stmt.setDouble(7, vehicle.getPrice());
-            stmt.setString(8, gson.toJson(vehicle.getAttributes()));
-
-            stmt.executeUpdate();
+            checkStmt.setString(1, vehicle.getId());
+            try (ResultSet rs = checkStmt.executeQuery()) {
+                if (rs.next() && rs.getInt(1) > 0) {
+                    // 🔄 UPDATE если есть
+                    String updateSql = "UPDATE vehicle SET category=?, brand=?, model=?, year=?, plate=?, price=?, attributes=?::jsonb WHERE id=?";
+                    try (PreparedStatement updateStmt = connection.prepareStatement(updateSql)) {
+                        updateStmt.setString(1, vehicle.getCategory());
+                        updateStmt.setString(2, vehicle.getBrand());
+                        updateStmt.setString(3, vehicle.getModel());
+                        updateStmt.setInt(4, vehicle.getYear());
+                        updateStmt.setString(5, vehicle.getPlate());
+                        updateStmt.setDouble(6, vehicle.getPrice());
+                        updateStmt.setString(7, gson.toJson(vehicle.getAttributes()));
+                        updateStmt.setString(8, vehicle.getId());
+                        updateStmt.executeUpdate();
+                    }
+                } else {
+                    // ➕ INSERT если нет
+                    String insertSql = "INSERT INTO vehicle (id, category, brand, model, year, plate, price, attributes) VALUES (?, ?, ?, ?, ?, ?, ?, ?::jsonb)";
+                    try (PreparedStatement insertStmt = connection.prepareStatement(insertSql)) {
+                        insertStmt.setString(1, vehicle.getId());
+                        insertStmt.setString(2, vehicle.getCategory());
+                        insertStmt.setString(3, vehicle.getBrand());
+                        insertStmt.setString(4, vehicle.getModel());
+                        insertStmt.setInt(5, vehicle.getYear());
+                        insertStmt.setString(6, vehicle.getPlate());
+                        insertStmt.setDouble(7, vehicle.getPrice());
+                        insertStmt.setString(8, gson.toJson(vehicle.getAttributes()));
+                        insertStmt.executeUpdate();
+                    }
+                }
+            }
         } catch (SQLException e) {
             throw new RuntimeException("Error occurred while saving vehicle", e);
         }
         return vehicle;
     }
+
 
     @Override
     public void deleteById(String id) {
